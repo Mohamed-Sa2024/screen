@@ -19,18 +19,6 @@ app.use("*", (req,res)=>{
 })
 
 
-(async () => {
-  const browser = await puppeteer.launch({
-    executablePath: '/usr/bin/google-chrome', // Path to Chrome binary
-    args: ['--no-sandbox', '--disable-setuid-sandbox'] // Required for many cloud environments
-  });
-
-  const page = await browser.newPage();
-  await page.goto('https://example.com');
-  await browser.close();
-})();
-
-
 
 app.listen(PORT, () => {
   console.log(`http://localhost:${PORT}`);
