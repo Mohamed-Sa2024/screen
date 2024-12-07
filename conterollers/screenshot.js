@@ -31,7 +31,7 @@ const downloadImage = async (req, res) => {
     console.log("Page navigation successful. Capturing screenshot...");
 
     // تحديد مسار حفظ الصورة
-    const imagePath = path.join(__dirname, "debug_final.png");
+    const imagePath = path.join(__dirname, "debug_final.pdf");
 
     // التقاط لقطة الشاشة
     await page.pdf({ path: imagePath, fullPage: true, format: 'A4' });
@@ -44,7 +44,7 @@ const downloadImage = async (req, res) => {
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader(
       "Content-Disposition",
-      'attachment; filename="invoice.png"'
+      'attachment; filename="invoice.pdf"'
     );
 
     // قراءة الصورة من المسار وإرسالها
