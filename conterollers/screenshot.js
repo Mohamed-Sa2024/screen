@@ -16,9 +16,8 @@ const downloadImage = async (req, res) => {
   try {
     const browser = await puppeteer.launch({
       headless: true,
-      args: ["--no-sandbox", "--disable-setuid-sandbox", '--disable-gpu',
-      '--disable-dev-shm-usage'],
-      executablePath: puppeteer.executablePath()
+      args: ["--no-sandbox", "--disable-setuid-sandbox", "--disable-gpu", "--disable-dev-shm-usage"],
+      executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || puppeteer.executablePath(),
     });
 
     const page = await browser.newPage();
@@ -32,26 +31,36 @@ const downloadImage = async (req, res) => {
 
     console.log("Page navigation successful. Capturing screenshot...");
 
-    // تحديد مسار حفظ الصورة
-    const imagePath = path.join(__dirname, "debug_final.png");
+    // Create directory if doesn't exist
+    const dirPath = path.join(__dirname, "debug_final");
 
-    // التقاط لقطة الشاشة
-    await page.pdf({ path: imagePath, fullPage: true, format:'A4' });
+    if (!fs.existsSync(dirPath)) {
+      fs.mkdirSync(dirPath, { recursive: true });
+    }
 
-    console.log(`Screenshot saved at: ${imagePath}`);
+    const imagePath = path.join(dirPath, "debug_final.pdf");
+
+    // Generate PDF
+    await page.pdf({
+      path: imagePath,
+      fullPage: true,
+      format: 'A4',
+      printBackground: true,  // Ensures background is included
+    });
+
+    console.log(`PDF saved at: ${imagePath}`);
 
     await browser.close();
 
-    // إرسال الصورة كاستجابة
+    // Send the PDF as response
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader(
       "Content-Disposition",
       'attachment; filename="invoice.pdf"'
     );
 
-    // قراءة الصورة من المسار وإرسالها
-    const imageBuffer = fs.readFileSync(imagePath);
-    res.send(imageBuffer);
+    const pdfBuffer = fs.readFileSync(imagePath);
+    res.send(pdfBuffer);
   } catch (err) {
     console.error("Error generating pdf:", err.message);
 
