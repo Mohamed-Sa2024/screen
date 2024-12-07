@@ -18,7 +18,7 @@ const downloadImage = async (req, res) => {
       headless: true,
       args: ["--no-sandbox", "--disable-setuid-sandbox", '--disable-gpu',
       '--disable-dev-shm-usage'],
-      executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined
+      executablePath: puppeteer.executablePath()
     });
 
     const page = await browser.newPage();
