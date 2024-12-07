@@ -1,4 +1,4 @@
-const puppeteer = require("puppeteer-core");
+const puppeteer = require("puppeteer");
 const fs = require("fs");
 const path = require("path");
 
@@ -16,8 +16,7 @@ const downloadImage = async (req, res) => {
   try {
     const browser = await puppeteer.launch({
       headless: true,
-      args: ["--no-sandbox", "--disable-setuid-sandbox", "--disable-gpu", "--disable-dev-shm-usage"],
-      executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || puppeteer.executablePath(),
+      args: ["--no-sandbox", "--disable-setuid-sandbox"],
     });
 
     const page = await browser.newPage();
@@ -31,45 +30,35 @@ const downloadImage = async (req, res) => {
 
     console.log("Page navigation successful. Capturing screenshot...");
 
-    // Create directory if doesn't exist
-    const dirPath = path.join(__dirname, "debug_final");
+    // تحديد مسار حفظ الصورة
+    const imagePath = path.join(__dirname, "debug_final.png");
 
-    if (!fs.existsSync(dirPath)) {
-      fs.mkdirSync(dirPath, { recursive: true });
-    }
+    // التقاط لقطة الشاشة
+    await page.pdf({ path: imagePath, fullPage: true, format: 'A4' });
 
-    const imagePath = path.join(dirPath, "debug_final.pdf");
-
-    // Generate PDF
-    await page.pdf({
-      path: imagePath,
-      fullPage: true,
-      format: 'A4',
-      printBackground: true,  // Ensures background is included
-    });
-
-    console.log(`PDF saved at: ${imagePath}`);
+    console.log(`Screenshot saved at: ${imagePath}`);
 
     await browser.close();
 
-    // Send the PDF as response
+    // إرسال الصورة كاستجابة
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader(
       "Content-Disposition",
-      'attachment; filename="invoice.pdf"'
+      'attachment; filename="invoice.png"'
     );
 
-    const pdfBuffer = fs.readFileSync(imagePath);
-    res.send(pdfBuffer);
+    // قراءة الصورة من المسار وإرسالها
+    const imageBuffer = fs.readFileSync(imagePath);
+    res.send(imageBuffer);
   } catch (err) {
-    console.error("Error generating pdf:", err.message);
+    console.error("Error generating image:", err.message);
 
     if (err.message.includes("ERR_NAME_NOT_RESOLVED")) {
       res.status(400).send("Invalid URL or cannot resolve the domain.");
     } else if (err.message.includes("Timeout")) {
       res.status(408).send("Request timed out. Please try again later.");
     } else {
-      res.status(500).send("Error generating the pdf file");
+      res.status(500).send("Error generating the image file");
     }
   }
 };
